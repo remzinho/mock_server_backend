@@ -5,7 +5,8 @@
 <li> pipenv
 </ul>
 
-# How to run:
+# How to run mocked server:
+
 Install dependencies:
 `pipenv install`
 
@@ -14,8 +15,13 @@ Run mocked server backend with:
 
 Use either postman or curl or any other method to do calls against the server.
 
+# How to run tests:
+
+`pipenv run pytest -s`
 
 # Server description:
+![Alt text](./images/state_transition_diagram.png "State-Transition Diagram")
+
 
 ## Switches from one state/view to another
 

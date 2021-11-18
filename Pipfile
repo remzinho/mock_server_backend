@@ -8,6 +8,7 @@ flask = "*"
 pytest = "*"
 requests = "*"
 globals = "*"
+pytest-ordering = "*"
 
 [dev-packages]
 

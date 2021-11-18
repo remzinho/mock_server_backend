@@ -191,7 +191,12 @@ def config():
             return json.dumps({"success": True,
                     "message": "Config loaded,",
                     "session_token": auth_token,
-                    "state": usr.view}), 200
+                    "state": usr.view,
+                    "user": usr.user,
+                    "password": usr.password,
+                    "uid": usr.uid,
+                    "token": usr.session_token,
+                    "allowed_items": usr.allowed_items}), 200
         else:
             # PUT
             print(request.data)

@@ -1,3 +1,4 @@
+from flask.json import jsonify
 import requests, json
 import globals, pytest
 
@@ -7,7 +8,8 @@ def populate_globals():
         "host": "http://127.0.0.1:5000",
         "login": "http://127.0.0.1:5000/login",
         "dashboard": "http://127.0.0.1:5000/dashboard",
-        "items": "http://127.0.0.1:5000/items"
+        "items": "http://127.0.0.1:5000/items",
+        "config": "http://127.0.0.1:5000/config"
     }
 
 def login_with(user, password):
@@ -39,3 +41,19 @@ def get_dashboard(user="usr1", password="pass1", token=""):
 def get_items(extraParameters = "", user="usr1", password="pass1", token=''):
     headers = {'Authorization': get_auth_token(user, password)}
     return requests.get(globals.urls["items"] + extraParameters, headers=headers)
+
+def get_config(user="usr1", password="pass1", token=""):
+    if token != "":
+        headers = {'Authorization': token}
+    else:
+        headers = {'Authorization': get_auth_token(user, password)}
+    return requests.get(globals.urls["config"], headers=headers)
+
+def put_config(body, user="usr1", password="pass1", token=""):
+    if token != "":
+        headers = {'Authorization': token, "Content-Type": "application/json"}
+    else:
+        headers = {'Authorization': get_auth_token(user, password)}
+    print("-----")
+    print(body)
+    return requests.put(globals.urls["config"], data=json.dumps(body), headers=headers)

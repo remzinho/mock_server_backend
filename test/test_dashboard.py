@@ -1,4 +1,3 @@
-from flask.json import jsonify
 from helpers.utils import *
 
 

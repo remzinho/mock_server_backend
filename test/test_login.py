@@ -7,6 +7,7 @@ def test_simpleLogin():
     """
     r = login_with("usr1", "pass1")
     check_property_in_response(r, "message", "Login successful!")
+    # test for simulated state change
     check_property_in_response(r, "state", "dashboard")
     assert r.status_code == 200
 

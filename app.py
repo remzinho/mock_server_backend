@@ -38,10 +38,10 @@ itemlist = [
         #[item_id, date, state, userid]
         ("item1","2021-10-16","stopped", "1"),
         ("item2","2021-10-18","paused", "1"),
-        ("item3","2021-11-19","running", "1"),
+        ("item3","2021-11-19","running", "2"),
         ("item4","2021-11-16","paused", "2"),
-        ("item5","2021-11-17","stopped", "2"),
-        ("item6","2021-11-18","running", "2"),
+        ("item5","2021-11-17","stopped", "1"),
+        ("item6","2021-11-18","running", "0"),
 ]
 cur.executemany("insert into items values (?, ?, ?, ?)", itemlist)
 
@@ -81,11 +81,10 @@ class UserSession(object):
                         something_changed = True
         return something_changed
 
-
     def invalidate_token(self):
         self.session_token = ""
         self.user = ""
-
+        self.view = "login"
 
     def generate_session_token(self):
         letters = string.ascii_lowercase
@@ -163,6 +162,7 @@ def dashboard():
 
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
+
 @api.route('/items', methods=["GET"])
 def get_items():
     auth_token = request.headers.get('Authorization')
@@ -194,7 +194,6 @@ def config():
                     "state": usr.view}), 200
         else:
             # PUT
-            # print(request.get_json())
             print(request.data)
             print(json.loads(request.data.decode()))
             usr.replace_user_data(json.loads(request.data.decode()))
@@ -203,49 +202,54 @@ def config():
             # change the state
             # do a redirect
             return json.dumps({"success": True, "message": "Modified configuration for user {}. Consider redirection.".format(usr.user),
-                 "session_token": auth_token, "user": usr.user }), 200
+                 "session_token": auth_token, "user": usr.user, "state": usr.view }), 200
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
+
 
 @api.route('/items/<item_id>/details', methods=["GET"])
 def get_item_details(item_id):
-    usr.view = "config"
     auth_token = request.headers.get('Authorization')
     if usr.valid_token(auth_token):
         # sets the state/view to config
         if request.method == "GET":
             usr.view = "item_details"
-            cur.execute("SELECT * FROM items WHERE item_id=?", (str(item_id)))
+            cur.execute("select * from items where item_id=(?)", (item_id, ))
             item  = cur.fetchone()
             if item: 
-                return jsonify(item), 200
-            return json.dumps({"success": False, "message": "Item not found."}), 404
+                return jsonify({"item": item, "state": usr.view}), 200
+            
+            return json.dumps({"success": False, "message": "Item not found.", "state": usr.view}), 404
 
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
 #TODO move out the item states in a class/enum
 valid_item_states = ("running", "paused", "stopped")
 
+
 @api.route('/items/<item_id>', methods=["PUT"])
 def update_item_state(item_id):
     auth_token = request.headers.get('Authorization')
     if usr.valid_token(auth_token):
         if request.method == "PUT":
-            usr.view = "item_control"
             content = request.get_json()
             
             if content["state"] not in valid_item_states:
                 return json.dumps({"success": False, "message": "Invalid item state." }), 400
 
-            cur.execute("select * from items where user_id=? and item_id=?", (str(usr.uid), str(item_id)))
+            cur.execute("select * from items where item_id=(?)", (item_id, ))
             item  = cur.fetchone()
-            print(item)
             if item:
-                cur.execute("UPDATE items SET state = ? where user_id=? and item_id=?", (str(content["state"]), str(usr.uid), str(item_id)))
-                return json.dumps({"success": True, "message": "State updated." }), 204
+                if item[0] in usr.allowed_items:
+                    cur.execute("UPDATE items SET state = ? where item_id=?", (str(content["state"]),str(item_id)))
+                    usr.view = "item_control"
+                    return json.dumps({"success": True, "message": "State updated.", "state": usr.view }), 200
+                else:
+                    return json.dumps({"success": False, "message": "State change not allowed." }), 403
 
             return json.dumps({"success": False, "message": "Item not found." }), 404
 
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
+
 
 if __name__ == '__main__':
     api.run()

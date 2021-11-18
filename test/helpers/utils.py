@@ -29,10 +29,13 @@ def get_property_in_response(request_obj, key):
 def get_auth_token(user, password):
     return get_property_in_response(login_with(user, password),"session_token")
 
-def get_dashboard(user="usr1", password="pass1"):
-    headers = {'Authorization': get_auth_token(user, password)}
+def get_dashboard(user="usr1", password="pass1", token=""):
+    if token != "":
+        headers = {'Authorization': token}
+    else:
+        headers = {'Authorization': get_auth_token(user, password)}
     return requests.get(globals.urls["dashboard"], headers=headers)
 
-def get_items(extraParameters = "", user="usr1", password="pass1"):
+def get_items(extraParameters = "", user="usr1", password="pass1", token=''):
     headers = {'Authorization': get_auth_token(user, password)}
     return requests.get(globals.urls["items"] + extraParameters, headers=headers)

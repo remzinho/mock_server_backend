@@ -54,6 +54,9 @@ class UserSession(object):
         self.view = "login"
         self.user = ""
         self.password = ""
+        self.uid = 0
+        self.session_token = ""
+        self.allowed_items = []
 
     # @staticmethod
     def check_credentials(self, creds):
@@ -67,10 +70,10 @@ class UserSession(object):
                 return True
         return False
 
-    def replace_user_data(self, uid, new_data):
+    def replace_user_data(self, new_data):
         something_changed = False
         for elem in user_db:
-            if uid == elem["uid"]:
+            if self.uid == elem["uid"]:
                 for key in new_data.keys():
                     if (new_data[key] and new_data[key] != elem[key]):
                         elem[key] = new_data[key]
@@ -79,7 +82,7 @@ class UserSession(object):
 
 
     def invalidate_token(self):
-        self.token = ""
+        self.session_token = ""
         self.user = ""
 
 
@@ -122,12 +125,18 @@ def get_list_of_items(page, page_size, sortby, order, filter_field, filter_value
 @api.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "GET":
-        current_view = {"state": "login"}
-        return json.dumps(current_view)
+        usr.view = "login"
+        return json.dumps({"state": usr.view})
     else:
         content = request.get_json()
         if usr.check_credentials(content):
             session_token = usr.generate_session_token()
+            print("----")
+            print(usr.view)
+            print(usr.uid)
+            print(usr.user)
+            print(usr.password)
+            print(usr.allowed_items)
             response = json.dumps({"success": True, "message": "Login successful!", "session_token": session_token }), 200
             # not doing redirect here; this will be done in frontend, as well as the auth token
             # response = redirect(url_for("dashboard"), code=200)
@@ -185,8 +194,8 @@ def config():
             # PUT
             # print(request.get_json())
             print(request.data)
-
-            # usr.replace_user_data(json.loads(request.data))
+            print(json.loads(request.data.decode()))
+            usr.replace_user_data(json.loads(request.data.decode()))
             usr.invalidate_token()
             # redirect flow:
             # change the state

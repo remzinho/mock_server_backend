@@ -202,7 +202,20 @@ def config():
             # do a redirect
             return json.dumps({"success": True, "message": "Modified configuration for user {}. Consider redirection.".format(usr.user),
                  "session_token": auth_token, "user": usr.user }), 200
+    return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
+@api.route('/items/<item_id>/details', methods=["GET"])
+def get_item_details(item_id):
+    usr.view = "config"
+    auth_token = request.headers.get('Authorization')
+    if usr.valid_token(auth_token):
+        # sets the state/view to config
+        if request.method == "GET":
+            usr.view = "config"
+            for item in itemlist:
+                if item[0] == item_id:
+                    return json.dumps(item), 200
+            return json.dumps({"success": False, "message": "Item not found."}), 404
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
 

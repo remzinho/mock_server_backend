@@ -52,7 +52,7 @@ GET /items?page=1&pageSize=50&sortBy=date&sortOrder=asc&filterField=state&filter
 ```
 
 ## config
-Not implemented (fully).
+Partially implemented. Missing allowed_items overwriting. Missing redirects.
 ```
 POST/PUT/PATCH /config
     {username: xxx,
@@ -64,7 +64,7 @@ POST/PUT/PATCH /config
 All other view/state change requests besides /dashboard will redirect to either dashboard or login (if user settings changed).
 
 ## item details
-Not implemented.
+Partially implemented. Missing redirects.
 
 ```
 GET /items/{id}/details
@@ -80,7 +80,4 @@ Not implemented.
 ```
 PUT /items/{id}
     {state: string}
-POST /items/{id}/state/run
-POST /items/{id}/state/pause
-POST /items/{id}/state/stop
 ```

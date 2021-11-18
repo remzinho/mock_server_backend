@@ -55,3 +55,13 @@ def put_config(body, user="usr1", password="pass1", token=""):
     else:
         headers = {'Authorization': get_auth_token(user, password)}
     return requests.put(globals.urls["config"], data=json.dumps(body), headers=headers)
+
+def get_item_details(item, token):
+    headers = {'Authorization': token, "Content-Type": "application/json"}
+    url = globals.urls["items"] + "/" + item +"/details"
+    return requests.get(url, headers=headers)
+
+def update_item_details(item, new_state, token):
+    headers = {'Authorization': token, "Content-Type": "application/json"}
+    url = globals.urls["items"] + "/" + item
+    return requests.put(url, data=json.dumps({"state": new_state}), headers=headers)

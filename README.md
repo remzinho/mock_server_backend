@@ -60,7 +60,9 @@ GET /items?page=1&pageSize=50&sortBy=date&sortOrder=asc&filterField=state&filter
 ```
 
 ## config
-Partially implemented. Missing allowed_items overwriting. Missing redirects.
+
+Modification done using PUT.
+Missing allowed_items overwriting. Missing redirects.
 ```
 POST/PUT/PATCH /config
     {username: xxx,

@@ -1,4 +1,5 @@
-from flask import Flask, json, request, redirect, url_for
+from flask import Flask, json, request, jsonify, redirect, url_for
+
 import random, string, sqlite3
 
 
@@ -7,6 +8,7 @@ api = Flask(__name__)
 # mocking static User DB
 user_db = [
     {
+        "uid": 1,
         "username": "usr1",
         "password": "pass1",
         "allowed_items": [
@@ -16,6 +18,7 @@ user_db = [
             ]
     },
     {
+        "uid": 2,
         "username": "usr2",
         "password": "pass2",
         "allowed_items": [
@@ -49,14 +52,36 @@ class UserSession(object):
         # super().__init__()
         self.session_token = ""
         self.view = "login"
+        self.user = ""
+        self.password = ""
 
-    @staticmethod
-    def check_credentials(creds):
+    # @staticmethod
+    def check_credentials(self, creds):
         for elem in user_db:
             if (creds["username"] == elem["username"]) and \
             (creds["password"] == elem["password"]):
+                self.user = elem["username"]
+                self.allowed_items = elem["allowed_items"]
+                self.password = elem["password"]
+                self.uid = elem["uid"]
                 return True
         return False
+
+    def replace_user_data(self, uid, new_data):
+        something_changed = False
+        for elem in user_db:
+            if uid == elem["uid"]:
+                for key in new_data.keys():
+                    if (new_data[key] and new_data[key] != elem[key]):
+                        elem[key] = new_data[key]
+                        something_changed = True
+        return something_changed
+
+
+    def invalidate_token(self):
+        self.token = ""
+        self.user = ""
+
 
     def generate_session_token(self):
         letters = string.ascii_lowercase
@@ -119,7 +144,12 @@ def dashboard():
     if usr.valid_token(auth_token):
         # sets the state/view to dashboard
         usr.view = "dashboard"
-        return json.dumps({"success": True, "message": "Dashboard loaded,", "session_token": auth_token }), 200
+        return json.dumps({"success": True, 
+                           "message": "Dashboard loaded,",
+                           "session_token": auth_token,
+                           "logged_user": usr.user,
+                           "state": usr.view}), 200
+
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
 @api.route('/items', methods=["GET"])
@@ -147,11 +177,22 @@ def config():
         # sets the state/view to config
         if request.method == "GET":
             usr.view = "config"
-            return json.dumps({"success": True, "message": "Config loaded,", "session_token": auth_token }), 200
+            return json.dumps({"success": True,
+                    "message": "Config loaded,",
+                    "session_token": auth_token,
+                    "state": usr.view}), 200
         else:
             # PUT
-            usr.session_token = ""
-            return json.dumps({"success": True, "message": "Modified configuration. Consider redirection.", "session_token": auth_token }), 200
+            # print(request.get_json())
+            print(request.data)
+
+            # usr.replace_user_data(json.loads(request.data))
+            usr.invalidate_token()
+            # redirect flow:
+            # change the state
+            # do a redirect
+            return json.dumps({"success": True, "message": "Modified configuration for user {}. Consider redirection.".format(usr.user),
+                 "session_token": auth_token, "user": usr.user }), 200
 
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 

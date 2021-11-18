@@ -19,6 +19,8 @@ Use either postman or curl or any other method to do calls against the server.
 
 `pipenv run pytest -s`
 
+<b>Note:</b> Tests don't do proper cleanup. Whenever they need rerunning, the server should also be restarted. This is usually avoided in containerized environments.
+
 # Server description:
 ![Alt text](./images/state_transition_diagram.png "State-Transition Diagram")
 
@@ -70,7 +72,8 @@ POST/PUT/PATCH /config
 All other view/state change requests besides /dashboard will redirect to either dashboard or login (if user settings changed).
 
 ## item details
-Partially implemented. Missing redirects.
+
+Changes state on GET. No redirects, this should be done by frontend.
 
 ```
 GET /items/{id}/details
@@ -82,7 +85,9 @@ GET /items/{id}/details
 ```
 
 ## item control
-Not implemented.
+
+Basic item control. Changes state only when a modification was made.
+
 ```
 PUT /items/{id}
     {state: string}

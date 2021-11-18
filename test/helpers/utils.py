@@ -54,6 +54,4 @@ def put_config(body, user="usr1", password="pass1", token=""):
         headers = {'Authorization': token, "Content-Type": "application/json"}
     else:
         headers = {'Authorization': get_auth_token(user, password)}
-    print("-----")
-    print(body)
     return requests.put(globals.urls["config"], data=json.dumps(body), headers=headers)

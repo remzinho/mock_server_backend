@@ -52,7 +52,7 @@ GET /items?page=1&pageSize=50&sortBy=date&sortOrder=asc&filterField=state&filter
 ```
 
 ## config
-
+Not implemented (fully).
 ```
 POST/PUT/PATCH /config
     {username: xxx,
@@ -64,7 +64,7 @@ POST/PUT/PATCH /config
 All other view/state change requests besides /dashboard will redirect to either dashboard or login (if user settings changed).
 
 ## item details
-
+Not implemented.
 
 ```
 GET /items/{id}/details
@@ -76,7 +76,7 @@ GET /items/{id}/details
 ```
 
 ## item control
-
+Not implemented.
 ```
 PUT /items/{id}
     {state: string}

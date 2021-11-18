@@ -32,17 +32,18 @@ user_db = [
 # mock sqlite db
 con = sqlite3.connect(":memory:", check_same_thread=False)
 cur = con.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS items (item_id, date, state)")
+cur.execute("CREATE TABLE IF NOT EXISTS items (item_id, date, state, user_id)")
 
 itemlist = [
-        ("item1","2021-10-16","stopped"),
-        ("item2","2021-10-18","paused"),
-        ("item3","2021-11-19","running"),
-        ("item4","2021-11-16","paused"),
-        ("item5","2021-11-17","stopped"),
-        ("item6","2021-11-18","running"),
+        #[item_id, date, state, userid]
+        ("item1","2021-10-16","stopped", "1"),
+        ("item2","2021-10-18","paused", "1"),
+        ("item3","2021-11-19","running", "1"),
+        ("item4","2021-11-16","paused", "2"),
+        ("item5","2021-11-17","stopped", "2"),
+        ("item6","2021-11-18","running", "2"),
 ]
-cur.executemany("insert into items values (?, ?, ?)", itemlist)
+cur.executemany("insert into items values (?, ?, ?, ?)", itemlist)
 
 
 # mocking user session
@@ -111,7 +112,7 @@ usr = UserSession()
 
 def get_list_of_items(page, page_size, sortby, order, filter_field, filter_value):
     
-    print("------")
+    print("---dbg---")
     print(page, page_size, sortby, order, filter_field, filter_value)
 
     if (filter_field == "any"):
@@ -119,7 +120,7 @@ def get_list_of_items(page, page_size, sortby, order, filter_field, filter_value
     else:
         sql_query = "SELECT * FROM items WHERE {} = '{}' ORDER BY {} {} LIMIT {}".format(filter_field, filter_value, sortby, order, str(page_size))
     cur.execute(sql_query)
-    print(cur.fetchall())
+    return cur.fetchall()
 
 
 @api.route('/login', methods=['GET', 'POST'])
@@ -174,9 +175,9 @@ def get_items():
         filter_field = request.args.get('filterField', default="any", type=str)
         filter_value = request.args.get('filterValue', default="any", type=str)
 
-        get_list_of_items(page,page_size, sort_by, sort_order, filter_field, filter_value)
+        items = get_list_of_items(page,page_size, sort_by, sort_order, filter_field, filter_value)
+        return jsonify(items), 200
 
-        return json.dumps({"success": True, "message": "Got list of items", "session_token": auth_token }), 200
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
 
@@ -212,13 +213,39 @@ def get_item_details(item_id):
     if usr.valid_token(auth_token):
         # sets the state/view to config
         if request.method == "GET":
-            usr.view = "config"
-            for item in itemlist:
-                if item[0] == item_id:
-                    return json.dumps(item), 200
+            usr.view = "item_details"
+            cur.execute("SELECT * FROM items WHERE item_id=?", (str(item_id)))
+            item  = cur.fetchone()
+            if item: 
+                return jsonify(item), 200
             return json.dumps({"success": False, "message": "Item not found."}), 404
+
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
+#TODO move out the item states in a class/enum
+valid_item_states = ("running", "paused", "stopped")
+
+@api.route('/items/<item_id>', methods=["PUT"])
+def update_item_state(item_id):
+    auth_token = request.headers.get('Authorization')
+    if usr.valid_token(auth_token):
+        if request.method == "PUT":
+            usr.view = "item_control"
+            content = request.get_json()
+            
+            if content["state"] not in valid_item_states:
+                return json.dumps({"success": False, "message": "Invalid item state." }), 400
+
+            cur.execute("select * from items where user_id=? and item_id=?", (str(usr.uid), str(item_id)))
+            item  = cur.fetchone()
+            print(item)
+            if item:
+                cur.execute("UPDATE items SET state = ? where user_id=? and item_id=?", (str(content["state"]), str(usr.uid), str(item_id)))
+                return json.dumps({"success": True, "message": "State updated." }), 204
+
+            return json.dumps({"success": False, "message": "Item not found." }), 404
+
+    return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 
 if __name__ == '__main__':
     api.run()

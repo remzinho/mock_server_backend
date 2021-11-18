@@ -1,4 +1,4 @@
-from helpers.login_utils import *
+from helpers.utils import *
 
 
 def test_simpleLogin():

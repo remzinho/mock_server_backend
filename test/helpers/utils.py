@@ -5,7 +5,9 @@ import globals, pytest
 def populate_globals():
     globals.urls = {
         "host": "http://127.0.0.1:5000",
-        "login": "http://127.0.0.1:5000/login"
+        "login": "http://127.0.0.1:5000/login",
+        "dashboard": "http://127.0.0.1:5000/dashboard",
+        "items": "http://127.0.0.1:5000/items"
     }
 
 def login_with(user, password):
@@ -26,3 +28,11 @@ def get_property_in_response(request_obj, key):
 
 def get_auth_token(user, password):
     return get_property_in_response(login_with(user, password),"session_token")
+
+def get_dashboard(user="usr1", password="pass1"):
+    headers = {'Authorization': get_auth_token(user, password)}
+    return requests.get(globals.urls["dashboard"], headers=headers)
+
+def get_items(extraParameters = "", user="usr1", password="pass1"):
+    headers = {'Authorization': get_auth_token(user, password)}
+    return requests.get(globals.urls["items"] + extraParameters, headers=headers)

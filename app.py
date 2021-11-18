@@ -1,4 +1,4 @@
-from flask import Flask, json, request, jsonify, redirect, url_for
+from flask import Flask, json, request, redirect, url_for
 import random, string, sqlite3
 
 
@@ -149,6 +149,9 @@ def config():
             usr.view = "config"
             return json.dumps({"success": True, "message": "Config loaded,", "session_token": auth_token }), 200
         else:
+            # PUT
+            usr.session_token = ""
+            return json.dumps({"success": True, "message": "Modified configuration. Consider redirection.", "session_token": auth_token }), 200
 
     return json.dumps({"success": False, "message": "Unauthorized.", "session_token": auth_token }), 401
 

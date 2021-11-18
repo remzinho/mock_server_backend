@@ -131,13 +131,14 @@ def login():
         content = request.get_json()
         if usr.check_credentials(content):
             session_token = usr.generate_session_token()
-            print("----")
-            print(usr.view)
-            print(usr.uid)
-            print(usr.user)
-            print(usr.password)
-            print(usr.allowed_items)
-            response = json.dumps({"success": True, "message": "Login successful!", "session_token": session_token }), 200
+            usr.view = "dashboard"
+            # print("----")
+            # print(usr.view)
+            # print(usr.uid)
+            # print(usr.user)
+            # print(usr.password)
+            # print(usr.allowed_items)
+            response = json.dumps({"success": True, "message": "Login successful!", "session_token": session_token, "state": usr.view }), 200
             # not doing redirect here; this will be done in frontend, as well as the auth token
             # response = redirect(url_for("dashboard"), code=200)
             # response.headers = {'Authorization': session_token}

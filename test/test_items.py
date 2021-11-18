@@ -33,8 +33,12 @@ def change_item_and_validate(new_state, item_list):
     token = get_auth_token("usr1", "pass1")
     new_value = new_state
     r = update_item_details("item1", new_value, token)
+    # quick assertions on the put request
+    assert r.status_code == 200
+    check_property_in_response(r, "state", "item_control")
+    
     r = get_item_details("item1", token)
-
+    assert r.status_code == 200
     check_property_in_response(r, "item", item_list)
 
 def test_changeItemState():
